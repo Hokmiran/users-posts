@@ -1,80 +1,79 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Form, FormGroup, Input, Label, Spinner } from "reactstrap";
-import Posts from '../posts/Posts';
+import Posts from "../posts/Posts";
 function Users() {
-    let initialState = {
-        data: undefined,
-        error: undefined,
-        loading: false,
-    };
-    const [users, setUsers] = useState(initialState);
-    const [selectedUser, setSelectedUser] = useState(0);
+  let initialState = {
+    data: undefined,
+    error: undefined,
+    loading: false,
+  };
+  const [users, setUsers] = useState(initialState);
+  const [selectedUser, setSelectedUser] = useState(0);
 
-    const getUsersData = () => {
+  const getUsersData = () => {
+    setUsers((oldData) => ({
+      ...oldData,
+      loading: true,
+      error: undefined,
+      data: undefined,
+    }));
+
+    axios
+      .get("https://jsonplaceholder.typicode.com/users")
+      .then(({ data }) => {
         setUsers((oldData) => ({
-            ...oldData,
-            loading: true,
-            error: undefined,
-            data: undefined,
+          ...oldData,
+          data: data,
+          loading: false,
+          error: undefined,
         }));
+      })
+      .catch((err) => {
+        setUsers({ data: undefined, loading: false, error: err.toString() });
+      });
+  };
 
-        axios
-            .get("https://jsonplaceholder.typicode.com/users")
-            .then(({ data }) => {
-                setUsers((oldData) => ({
-                    ...oldData,
-                    data: data,
-                    loading: false,
-                    error: undefined,
-                }));
-            })
-            .catch((err) => {
-                setUsers({ data: undefined, loading: false, error: err.toString() });
-            });
-    };
+  useEffect(() => {
+    getUsersData();
+  }, []);
 
-    useEffect(() => {
-        getUsersData();
-    }, []);
+  const handleUserSelect = (e) => {
+    setSelectedUser(parseInt(e.target.value));
+  };
 
-    const handleUserSelect = (e) => {
-        setSelectedUser(parseInt(e.target.value));
-    };
-
-    return (
+  return (
+    <>
+      {users.error && <h5>Error occured ....</h5>}
+      {users.loading && <Spinner />}
+      {users.data && (
         <>
-            {users.error && <h5 color="red">Error occured ....</h5>}
-            {users.loading && <Spinner />}
-            {users.data &&
-                <>
-                    <Form style={{ width: "30%" }}>
-                        <FormGroup>
-                            <Label for="exampleSelect">Users</Label>
-                            <Input
-                                id="exampleSelect"
-                                name="select"
-                                type="select"
-                                onChange={handleUserSelect}
-                            >
-                                <optgroup label="Select User">
-                                    <option value="0">All Users</option>
-                                    {users?.data &&
-                                        users?.data?.map((user) => (
-                                            <option key={user.id} value={user.id}>
-                                                {user.name}
-                                            </option>
-                                        ))}
-                                </optgroup>
-                            </Input>
-                        </FormGroup>
-                    </Form>
-                    <Posts selectedUser={selectedUser} />
-                </>
-            }
+          <Form style={{ width: "30%" }}>
+            <FormGroup>
+              <Label for="exampleSelect">Users</Label>
+              <Input
+                id="exampleSelect"
+                name="select"
+                type="select"
+                onChange={handleUserSelect}
+              >
+                <optgroup label="Select User">
+                  <option value="0">All Users</option>
+                  {users?.data &&
+                    users?.data?.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name}
+                      </option>
+                    ))}
+                </optgroup>
+              </Input>
+            </FormGroup>
+          </Form>
+          <Posts selectedUser={selectedUser} />
         </>
-    );
+      )}
+    </>
+  );
 }
 
-
-export default Users
+export default Users;
